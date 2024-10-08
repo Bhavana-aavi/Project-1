@@ -39,7 +39,7 @@ sns.heatmap(corr_matrix, annot= True, cmap= 'coolwarm', fmt= '.2f')
 plt.title('Correlation Matrix heatmap')
 plt.show()
 scaler = StandardScaler()
-X_scaled = scaler.fit_transform(df_encoded)
+X_scaled = scaler.fit_transform(X)
 pca= PCA()
 X_pca = pca.fit_transform(X_scaled)
 len(X_pca)
@@ -56,9 +56,21 @@ plt.show()
 optimal_components = np.argmax(cumulative_variance >= 0.80)+1
 pca_optimal= PCA(n_components = optimal_components)
 pca_optimal
-X_pca_optimal = pca.fit_transform(X_scaled)
-X_pca_optimal.shape
-X_train_pca, X_test_pca, y_train_pca, y_test_pca = train_test_split(X_pca_optimal, y_encoded, test_size= 0.3, random_state= 42)
+components = pca.components_
+important_features = np.abs(components).mean(axis=0).argsort()[::-1][:optimal_components]
+
+print("Most important features in order of importance:")
+for i in important_features:
+    print(f'Component {i + 1}: {df.columns[i]}')
+
+df_PCA = df_encoded[['Rhythm Complexity','Tempo','Percussion Strength', 'Electronic Element Presence',
+                    'Instrumental Overlaps','Metal Frequencies', 'String Instrument Detection', 'Distorted Guitar' ]]
+scaler = StandardScaler()
+df_scaled = scaler.fit_transform(df_PCA)
+pca = PCA(n_components=8)
+df_pca = pca.fit_transform(df_scaled)
+
+X_train_pca, X_test_pca, y_train_pca, y_test_pca = train_test_split(df_pca, y_encoded, test_size= 0.3, random_state= 45)
 log_reg_pca = LogisticRegression(max_iter= 10000)
 log_reg_pca.fit(X_train_pca, y_train_pca)
 y_pred_pca = log_reg_pca.predict(X_test_pca)
@@ -67,7 +79,7 @@ print(f"Accuracy with PCA : {accuracy_pca:.2f}" )
 report_pca = classification_report(y_test_pca, y_pred_pca)
 print('Classification report (PCA):')
 print(report_pca)
-X_train_orig,X_test_orig, y_train_orig, y_test_orig = train_test_split(X_scaled, y_encoded, test_size= 0.3, random_state= 42)
+X_train_orig,X_test_orig, y_train_orig, y_test_orig = train_test_split(X_scaled, y_encoded, test_size= 0.3, random_state= 44)
 log_reg_orig = LogisticRegression(max_iter= 10000)
 log_reg_orig.fit(X_train_orig, y_train_orig)
 y_pred_orig = log_reg_orig.predict(X_test_orig)
